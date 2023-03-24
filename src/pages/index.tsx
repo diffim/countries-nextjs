@@ -1,40 +1,13 @@
-import { GetStaticProps, InferGetStaticPropsType, type NextPage } from "next";
+import { GetStaticProps, InferGetStaticPropsType } from "next";
 import Head from "next/head";
-import Link from "next/link";
 import Card from "~/components/Card";
-import Navbar from "~/components/Navbar";
 import Filter from "~/components/Filter";
 
-export const getStaticProps: GetStaticProps<{
-  data: [
-    {
-      name: { common: string; official: string };
-      flags: { png: string; alt: string };
-      region: string;
-      capital: string;
-      population: string;
-    }
-  ];
-}> = async function () {
-  // really awesome api lol allows u to filter and stuff,
-  // appreciate the typesafety provided on getstaticprops
-  const res = await fetch("https://restcountries.com/v3.1/all");
-  const data = await res.json();
-
-  if (!data) {
-    return {
-      notFound: true,
-    };
-  }
-
-  return {
-    props: { data },
-  };
-};
-
-//sorts alphabetically then maps over it
-
 const Home = ({ data }: InferGetStaticPropsType<typeof getStaticProps>) => {
+  // i decided im gonna do client side fetching for the index route and SSG for the countries
+  // as the SEO doesnt really matter here and it hurts preformance cuz the page always has to fetch all the data before showing something
+  // another way i couldve aproached this was to do pagination with the API requests but i dont want to learn this lol maybe later
+
   const countries = data
     .sort((a, b) => a.name.common.localeCompare(b.name.common))
     .map((country) => (
@@ -72,3 +45,45 @@ const Home = ({ data }: InferGetStaticPropsType<typeof getStaticProps>) => {
 };
 
 export default Home;
+
+export const getStaticProps: GetStaticProps<{
+  data: [
+    {
+      name: { common: string; official: string };
+      flags: { png: string; alt: string };
+      region: string;
+      capital: string;
+      population: string;
+    }
+  ];
+}> = async function () {
+  // really awesome api lol allows u to filter and stuff,
+  // appreciate the typesafety provided on getstaticprops
+  const res = await fetch(
+    "https://restcountries.com/v3.1/all?fields=name,region,capital,name,population,flags"
+  );
+
+  const data: [
+    {
+      name: { common: string; official: string };
+      flags: { png: string; alt: string };
+      region: string;
+      capital: string;
+      population: string;
+    }
+  ] = await res.json();
+
+  if (!data) {
+    return {
+      notFound: true,
+    };
+  }
+
+  console.log(data);
+
+  return {
+    props: { data },
+  };
+};
+
+//sorts alphabetically then maps over it

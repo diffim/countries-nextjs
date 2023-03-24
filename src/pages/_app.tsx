@@ -3,8 +3,11 @@ import { ThemeProvider } from "next-themes";
 import "~/styles/globals.css";
 import Navbar from "~/components/Navbar";
 import Head from "next/head";
+import { QueryClient, QueryClientProvider } from "react-query";
 
 const MyApp: AppType = ({ Component, pageProps }) => {
+  const queryClient = new QueryClient();
+
   return (
     <>
       <Head>
@@ -15,12 +18,15 @@ const MyApp: AppType = ({ Component, pageProps }) => {
           href="https://external-content.duckduckgo.com/iu/?u=http%3A%2F%2Fcdn.onlinewebfonts.com%2Fsvg%2Fimg_431077.png&f=1&nofb=1&ipt=6ceb11c647752f70e4af3cf96af452b1d5fd5687459e2dd693aee7540eb82326&ipo=images"
         />
       </Head>
-      <ThemeProvider attribute="class">
-        <div className="dark:dark-bg light-bg ">
-          <Navbar />
-          <Component {...pageProps} />
-        </div>
-      </ThemeProvider>
+
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider attribute="class">
+          <div className="dark:dark-bg light-bg ">
+            <Navbar />
+            <Component {...pageProps} />
+          </div>
+        </ThemeProvider>
+      </QueryClientProvider>
     </>
   );
 };
