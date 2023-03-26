@@ -1,68 +1,98 @@
 import { GetStaticProps, InferGetStaticPropsType } from "next";
 import Head from "next/head";
-import Image from "next/image";
 import Link from "next/link";
-import React from "react";
+import { useRouter } from "next/router";
+import React, { MouseEventHandler, useEffect, useState } from "react";
 import { MdOutlineWest } from "react-icons/md";
+import { useQuery } from "react-query";
 
 function Country({
-  countriesData,
+  countryData,
 }: InferGetStaticPropsType<typeof getStaticProps>) {
-  //the countriesData comes in an array bc we sorted by name, im taking the first one as it's always the one in english.
-  const countriesDataNew = countriesData[0];
-
-  //yea i had to do this because Object had a type of unkown which stopped my code from working
-  const object: any = Object;
-
-  //nativename is an object with objects nested inside it so i got the first one there as well
-  //gonna start spamming ternaries everywhere cuz some stuff like antarctica doesnt have these objects/valeus inside the api request
-  const firstNativeName = object.values(countriesDataNew.name.nativeName)[0]
-    ? object.values(countriesDataNew.name.nativeName)[0].common
-    : "No native name";
-
-  const currency = object.values(countriesDataNew.currencies)[0]
-    ? object.values(countriesDataNew.currencies)[0].name
-    : "No currency";
-
-  const languages = object.values(countriesDataNew.languages);
-  const languagesJsx = languages.map((language: JSX.Element, index: number) => (
-    <p key={index}>{language}</p>
-  ));
-
-  const domain = countriesDataNew.tld[0];
+  const router = useRouter();
   const formatNumber = Intl.NumberFormat();
-  const formattedPopulation = formatNumber.format(
-    parseInt(countriesDataNew.population)
-  );
-  const stringifiedPopulation = formattedPopulation.toString();
+  const [borders, setBorders] = useState<string[]>([]);
+  const object: any = Object;
+  const domain = countryData.tld[0];
 
-  //turned into a component because ill maybe need it later
+  // api only returns the 3-letter code
+  // so we have to do this weird use effect to get the borders
+  useEffect(() => {
+    setBorders([]);
+    countryData.borders.map(async (border) => {
+      const res = await fetch(
+        `https://restcountries.com/v3.1/alpha/${border}?fields=name`
+      );
+      const {
+        name: { common },
+      } = await res.json();
+      return setBorders((borders) => [...borders, common]);
+    });
+  }, [countryData]);
+
+  function getNativeName() {
+    //nativename is an object with objects nested inside it so i got the first one there as well
+    //gonna start spamming ternaries everywhere cuz some stuff like antarctica doesnt have these objects/valeus inside the api request
+    const firstNativeName = object.values(countryData.name.nativeName)[0]
+      ? object.values(countryData.name.nativeName)[0].common
+      : "No native name";
+    return firstNativeName;
+  }
+
+  function getCurrency() {
+    const currency = object.values(countryData.currencies)[0]
+      ? object.values(countryData.currencies)[0].name
+      : "No currency";
+
+    return currency;
+  }
+
+  function getLanguages() {
+    const languages = object.values(countryData.languages);
+    const languagesJsx = languages.map(
+      (language: JSX.Element, index: number) => (
+        <p key={index} className="mr-1">
+          {language}
+          {languages.length > 1 ? "," : ""}
+        </p>
+      )
+    );
+    return languagesJsx;
+  }
+
+  function getPopulation() {
+    const formattedPopulation = formatNumber.format(
+      parseInt(countryData.population)
+    );
+    const stringifiedPopulation = formattedPopulation.toString();
+    return stringifiedPopulation;
+  }
+
   function Button({
     className,
     children,
+    onClick,
   }: {
     className?: string;
     children: any;
+    onClick?: MouseEventHandler<HTMLButtonElement>;
   }) {
     return (
       <button
+        onClick={onClick}
         className={`${className} light-element dark:dark-element  rounded-sm px-6  py-1 
-        shadow-md outline-none active:scale-90 `}
+          shadow-md outline-none active:scale-90 `}
       >
         {children}
       </button>
     );
   }
 
-  const borders = countriesDataNew.borders.map((border, index) => {
-    return <Button key={index}> {border}</Button>;
-  });
-
   function Statistic(props: { title: string; children: string | undefined }) {
     return (
       <div className="mb-4  flex items-center gap-2">
         <p className="font-semibold">{props.title}: </p>
-        <div className="flex items-center gap-1">{props.children}</div>
+        <div className="flex items-center ">{props.children}</div>
       </div>
     );
   }
@@ -70,32 +100,34 @@ function Country({
   return (
     <>
       <Head>
-        <title>{countriesDataNew.name.common}</title>
+        <title>{countryData.name.common}</title>
         <meta
           name="description"
-          content={`A handful of information about the country ${countriesDataNew.name.common}.`}
+          content={`A handful of information about the country ${countryData.name.common}.`}
         />
       </Head>
 
-      <div className=" flex flex-1 grid-cols-2  flex-col items-center p-8 px-10 lg:mt-10 lg:flex-row lg:gap-20  xl:gap-40 xl:px-20">
+      <div className=" relative flex flex-1  grid-cols-2 flex-col items-center p-8 px-10 lg:mt-10 lg:flex-row lg:gap-20  xl:gap-40 xl:px-20">
         <div className="relative flex   w-full flex-col lg:w-2/5">
-          <Link href="/">
-            <Button className=" mb-10 flex items-center gap-1 py-1 md:px-8 md:py-3">
-              <MdOutlineWest />
-              Back
-            </Button>
-          </Link>
+          <Button
+            onClick={() => router.back()}
+            className=" mb-10  flex max-w-[120px] items-center gap-1 py-1 md:px-8 md:py-3"
+          >
+            <MdOutlineWest />
+            Back
+          </Button>
 
-          <div className="relative   w-full   py-10">
+          <div className="relative  w-full     py-10">
+            {/* if i wanted to make this an Image id have to fully change how i went about styling this which i dont wanna do. */}
             <img
-              src={countriesDataNew.flags.png}
-              alt={countriesDataNew.flags.alt}
-              className="max-h-[400px]  w-full max-w-[700px] bg-cover  "
+              src={countryData.flags.png}
+              alt={countryData.flags.alt}
+              className="max-h-[400px] w-full max-w-[700px] bg-cover  "
             />
           </div>
         </div>
 
-        {countriesDataNew.name.common === "Azerbaijan" ? (
+        {countryData.name.common === "Azerbaijan" ? (
           <p className="absolute left-1/2 top-0 -translate-x-1/2 text-xl font-semibold ">
             You're now on the page of my country :b
           </p>
@@ -103,34 +135,32 @@ function Country({
 
         <div className="   w-full lg:w-3/5 xl:w-2/5">
           <p className="pb-6 text-4xl font-semibold md:mb-4 lg:mt-20">
-            {countriesDataNew.name.common}
+            {countryData.name.common}
           </p>
 
           <div className="flex flex-col justify-between sm:flex-row">
             <div>
               <Statistic title="Native Name">
-                {countriesDataNew.name.nativeName === undefined
+                {countryData.name.nativeName === undefined
                   ? "No native name.."
-                  : firstNativeName}
+                  : getNativeName()}
               </Statistic>
 
               <Statistic title="Capital">
-                {countriesDataNew.capital.length === 0
+                {countryData.capital.length === 0
                   ? "No capital"
-                  : countriesDataNew.capital}
+                  : countryData.capital}
               </Statistic>
 
-              <Statistic title="Population">{stringifiedPopulation}</Statistic>
-              <Statistic title="Region">{countriesDataNew.region}</Statistic>
-              <Statistic title="Sub Region">
-                {countriesDataNew.subregion}
-              </Statistic>
+              <Statistic title="Population">{getPopulation()}</Statistic>
+              <Statistic title="Region">{countryData.region}</Statistic>
+              <Statistic title="Sub Region">{countryData.subregion}</Statistic>
             </div>
 
             <div className="my-10 md:my-0">
-              <Statistic title="Currency">{currency}</Statistic>
+              <Statistic title="Currency">{getCurrency()}</Statistic>
               <Statistic title="Domain">{domain}</Statistic>
-              <Statistic title="Languages">{languagesJsx}</Statistic>
+              <Statistic title="Languages">{getLanguages()}</Statistic>
             </div>
           </div>
 
@@ -142,7 +172,14 @@ function Country({
               </p>
             ) : (
               <div className="flex  flex-wrap items-center gap-2">
-                {borders}
+                {borders.map((border, index) => {
+                  return (
+                    <Button key={index} onClick={() => router.push(border)}>
+                      {" "}
+                      {border}
+                    </Button>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -156,14 +193,14 @@ export default Country;
 
 export async function getStaticPaths() {
   // lol i had been trying to do something like getstaticpaths on react router when i had first started but that just didnt exist,
-  // seeing this in next makes me really happy as this is really great for SEO and gives u most of the MPA benefits while still having the SPA-like "feel".
+  // seeing this in next makes me really happy as this is really great for SEO and gives u most of the MPA benefits while still having the SPA-like feel.
   // really loving the next experience so far
 
   const res = await fetch("https://restcountries.com/v3.1/all?fields=name");
 
-  const countriesData = await res.json();
+  const countryData = await res.json();
 
-  const paths = countriesData.map((country: { name: { common: string } }) => ({
+  const paths = countryData.map((country: { name: { common: string } }) => ({
     params: { country: country.name.common },
   }));
 
@@ -174,33 +211,32 @@ export async function getStaticPaths() {
 }
 
 export const getStaticProps: GetStaticProps<{
-  countriesData: [
-    {
-      languages: {};
-      subregion: string;
-      borders: [];
-      name: {
-        nativeName: {};
-        common: string;
-        official: string;
-      };
-      tld: string[];
-      currencies: {};
-      flags: { png: string; alt: string };
-      region: string;
-      capital: string;
-      population: string;
-    }
-  ];
+  countryData: {
+    languages: {};
+    subregion: string;
+    borders: [];
+    name: {
+      nativeName: {};
+      common: string;
+      official: string;
+    };
+    tld: string[];
+    currencies: {};
+    flags: { png: string; alt: string };
+    region: string;
+    capital: string;
+    population: string;
+  };
 }> = async function (context) {
   const res = await fetch(
-    `https://restcountries.com/v3.1/name/${context.params?.country}?fields=name,capital,borders,region,subregion,tld,currency,flags,currencies,population,languages`
+    `https://restcountries.com/v3.1/name/${context.params?.country}?fields=name,cioc,capital,borders,region,subregion,tld,currency,flags,currencies,population,languages`
   );
-  const countriesData = await res.json();
+  const data = await res.json();
 
-  if (!countriesData) {
+  if (!data) {
     return { notFound: true };
   }
 
-  return { props: { countriesData } };
+  const countryData = data[0];
+  return { props: { countryData } };
 };

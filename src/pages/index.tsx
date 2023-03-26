@@ -1,29 +1,44 @@
+import { matchSorter } from "match-sorter";
 import { GetStaticProps, InferGetStaticPropsType } from "next";
 import Head from "next/head";
+import { useRouter } from "next/router";
+import { useState } from "react";
 import Card from "~/components/Card";
 import Filter from "~/components/Filter";
 
 const Home = ({ data }: InferGetStaticPropsType<typeof getStaticProps>) => {
-  // i decided im gonna do client side fetching for the index route and SSG for the countries
-  // as the SEO doesnt really matter here and it hurts preformance cuz the page always has to fetch all the data before showing something
-  // another way i couldve aproached this was to do pagination with the API requests but i dont want to learn this lol maybe later
+  const router = useRouter();
 
-  const countries = data
-    .sort((a, b) => a.name.common.localeCompare(b.name.common))
-    .map((country) => (
-      <Card
-        key={country.name.official}
-        to={country.name.common}
-        name={country.name.common}
-        flag={{
-          src: country.flags.png,
-          alt: country.flags.alt,
-        }}
-        region={country.region}
-        capital={country.capital}
-        population={country.population}
-      />
-    ));
+  console.log(data);
+
+  //orders by alphabetical order at first, whenever you type it orders using the matchSorter algorithm.
+  const orderedCountries = matchSorter(
+    data,
+    router.query.search ? (router.query.search as string) : "",
+    { keys: ["name.common"] }
+  );
+
+  //orders by region
+  const countriesWithRegion = orderedCountries.filter(
+    router.query.region
+      ? (country) => country.region === router.query.region
+      : (country) => !(country.region === null)
+  );
+
+  const countries = countriesWithRegion.map((country, index) => (
+    <Card
+      key={country.name.official}
+      to={country.name.common}
+      name={country.name.common}
+      flag={{
+        src: country.flags.png,
+        alt: country.flags.alt,
+      }}
+      region={country.region}
+      capital={country.capital}
+      population={country.population}
+    />
+  ));
 
   return (
     <>
@@ -57,9 +72,9 @@ export const getStaticProps: GetStaticProps<{
     }
   ];
 }> = async function () {
-  // really awesome api lol allows u to filter and stuff,
   // appreciate the typesafety provided on getstaticprops
   const res = await fetch(
+    // really awesome api lol allows u to filter and stuff,
     "https://restcountries.com/v3.1/all?fields=name,region,capital,name,population,flags"
   );
 
@@ -78,8 +93,6 @@ export const getStaticProps: GetStaticProps<{
       notFound: true,
     };
   }
-
-  console.log(data);
 
   return {
     props: { data },

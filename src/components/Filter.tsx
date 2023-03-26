@@ -1,12 +1,57 @@
-import React from "react";
+import React, { MouseEventHandler } from "react";
 import { BiSearch } from "react-icons/bi";
 import { useState } from "react";
+import { useRouter } from "next/router";
 
 function Filter() {
   const [showDropdown, setShowDropdown] = useState(false);
+  const router = useRouter();
 
-  function DropDownItem(props: { name: string }) {
-    return <button className=" p-1">{props.name}</button>;
+  //i love filterng stuff through url query  params i believe its the best way to filter if possible
+  function inputChange(e: { target: { value: string } }) {
+    //replace doesnt affect the history stack so its ideal for stuff like this
+    //spread out old query object so it doesnt wipe the old queries when adding new one
+    router.replace(
+      {
+        pathname: "",
+        query: { ...router.query, search: e.target.value },
+      },
+      undefined,
+      { shallow: true }
+    );
+  }
+
+  function regionChange(region: string) {
+    router.replace(
+      {
+        pathname: "",
+        query: { ...router.query, region: region },
+      },
+      undefined,
+      { shallow: true }
+    );
+  }
+
+  function clearRegion() {
+    router.replace(
+      {
+        pathname: "",
+        query: { ...router.query, region: null },
+      },
+      undefined,
+      { shallow: true }
+    );
+  }
+
+  function DropDownItem(props: {
+    name: string;
+    onClick: MouseEventHandler<HTMLButtonElement>;
+  }) {
+    return (
+      <button className=" p-1" onClick={props.onClick}>
+        {props.name}
+      </button>
+    );
   }
 
   return (
@@ -15,8 +60,10 @@ function Filter() {
         <BiSearch />
         <input
           type="text"
-          placeholder="Search country"
-          className=" ml-2  w-full bg-transparent outline-none "
+          onChange={(e) => inputChange(e)}
+          defaultValue={router.query.search}
+          placeholder={"Search country"}
+          className=" ml-2  w-full bg-transparent outline-none  "
         />
       </div>
 
@@ -33,11 +80,29 @@ function Filter() {
             className="dark:dark-element light-element absolute  z-10 mt-5 flex w-full flex-col items-start
             rounded-sm p-3 px-5 shadow-md  shadow-gray-200  dark:shadow-gray-700  "
           >
-            <DropDownItem name="Africa" />
-            <DropDownItem name="America" />
-            <DropDownItem name="Asia" />
-            <DropDownItem name="Europe" />
-            <DropDownItem name="Oceania" />
+            <DropDownItem name="All" onClick={clearRegion} />
+
+            <DropDownItem
+              name="Africa"
+              onClick={() => regionChange("Africa")}
+            />
+
+            <DropDownItem
+              name="Americas"
+              onClick={() => regionChange("Americas")}
+            />
+
+            <DropDownItem name="Asia" onClick={() => regionChange("Asia")} />
+
+            <DropDownItem
+              name="Europe"
+              onClick={() => regionChange("Europe")}
+            />
+
+            <DropDownItem
+              name="Oceania"
+              onClick={() => regionChange("Oceania")}
+            />
           </div>
         ) : null}
       </div>

@@ -1,8 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
-import React from "react";
 
-function Card({
+import React, { memo } from "react";
+
+const Card = memo(function ({
   to,
   region,
   population,
@@ -27,7 +28,9 @@ function Card({
   return (
     <Link
       href={to}
-      className=" dark:dark-element light-element   w-full rounded-sm shadow-gray-200 drop-shadow-md active:scale-95 dark:shadow-gray-700 sm:w-72"
+      tabIndex={0}
+      className=" dark:dark-element light-element w-full rounded-sm shadow-gray-200 drop-shadow-md
+      active:scale-95 dark:shadow-gray-700 sm:w-72"
     >
       <div className=" relative h-64 w-full sm:h-40 sm:w-72">
         <Image
@@ -36,7 +39,8 @@ function Card({
           fill
           sizes="(max-width: 640px) 100%, 
               (max-width: 3000px) 288px,"
-          className=" h-auto w-auto rounded-t-sm"
+          style={{ objectFit: "cover" }}
+          className=" h-auto w-auto rounded-t-sm "
         />
       </div>
 
@@ -51,6 +55,6 @@ function Card({
       </div>
     </Link>
   );
-}
+});
 
 export default Card;
