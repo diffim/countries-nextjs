@@ -3,22 +3,35 @@ import { GetStaticProps, InferGetStaticPropsType } from "next";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { useState } from "react";
+import { useInfiniteQuery } from "react-query";
 import Card from "~/components/Card";
 import Filter from "~/components/Filter";
 
 const Home = ({ data }: InferGetStaticPropsType<typeof getStaticProps>) => {
   const router = useRouter();
+  // const {
+  //   data: countriesData,
+  //   isLoading,
+  //   isFetching,
+  //   fetchNextPage,
+  //   hasNextPage,
+  //   error,
+  // } = useInfiniteQuery("countries", {
+  //   getNextPageParam: (lastPage, pages) => {
 
-  console.log(data);
+  //   },
+  // });
+  // console.log(countriesData);
 
-  //orders by alphabetical order at first, whenever you type it orders using the matchSorter algorithm.
+  //orders by alphabetical order at first, whenever you type it gets the value from the URL search query params
+  // and then orders using the matchSorter algorithm.
   const orderedCountries = matchSorter(
     data,
     router.query.search ? (router.query.search as string) : "",
     { keys: ["name.common"] }
   );
 
-  //orders by region
+  //filters by region, also from url query
   const countriesWithRegion = orderedCountries.filter(
     router.query.region
       ? (country) => country.region === router.query.region

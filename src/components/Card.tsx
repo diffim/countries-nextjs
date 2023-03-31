@@ -29,8 +29,8 @@ const Card = memo(function ({
     <Link
       href={to}
       tabIndex={0}
-      className=" dark:dark-element light-element w-full rounded-sm shadow-gray-200 drop-shadow-md
-      active:scale-95 dark:shadow-gray-700 sm:w-72"
+      className=" dark:dark-element light-element w-full rounded-sm shadow-gray-200 drop-shadow-md transition duration-200 
+      hover:-translate-y-2 active:scale-95 dark:shadow-gray-700 sm:w-72"
     >
       <div className=" relative h-64 w-full sm:h-40 sm:w-72">
         <Image
