@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from "react-query";
 
 const MyApp: AppType = ({ Component, pageProps }) => {
   const queryClient = new QueryClient();
+
   return (
     <>
       <Head>
