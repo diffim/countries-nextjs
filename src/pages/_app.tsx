@@ -1,8 +1,11 @@
+// i feel like i used too many packages here
+// but they were all useful tho so i guess its alright
 import { type AppType } from "next/dist/shared/lib/utils";
 import { ThemeProvider } from "next-themes";
 import "~/styles/globals.css";
 import Navbar from "~/components/Navbar";
 import Head from "next/head";
+import NextNProgress from "nextjs-progressbar";
 import { QueryClient, QueryClientProvider } from "react-query";
 
 const MyApp: AppType = ({ Component, pageProps }) => {
@@ -20,6 +23,7 @@ const MyApp: AppType = ({ Component, pageProps }) => {
       </Head>
       <ThemeProvider attribute="class">
         <QueryClientProvider client={queryClient}>
+          <NextNProgress showOnShallow={false} />
           <div className="dark:dark-bg light-bg ">
             <Navbar />
             <Component {...pageProps} />
